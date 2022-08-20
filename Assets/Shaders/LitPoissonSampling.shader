@@ -164,14 +164,15 @@
 			{
 			    #ifdef _POISSON_SHADOWS_ANY
 			    Light light = GetMainLight();
-
                 const half4 shadow_params = GetMainLightShadowParams();
 			    light.shadowAttenuation = sample_shadowmap_poisson(TEXTURE2D_ARGS(_MainLightShadowmapTexture, sampler_MainLightShadowmapTexture), shadow_coord, shadow_params, position_ws, false);
+			    #else
+			    Light light = GetMainLight(shadow_coord);
+			    #endif
+
+			    light.shadowAttenuation = lerp(light.shadowAttenuation, 1, GetMainLightShadowFade(position_ws));
 
 			    return light;
-			    #else
-                return GetMainLight(shadow_coord);
-			    #endif
 			}
 			
 			half4 frag (const v2f i) : SV_Target
