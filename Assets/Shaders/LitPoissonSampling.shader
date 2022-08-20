@@ -115,7 +115,16 @@
                 return frac(sin(dot_product) * 43758.5453);
 			}
 
-			real sample_shadowmap_poisson(TEXTURE2D_SHADOW_PARAM(shadow_map, sampler_shadow_map), float4 shadow_coord, half4 shadow_params, float4 position_cs, const bool is_perspective_projection = true)
+			float2 rotate2d(const float2 v, const float angle_radians)
+			{
+			    float sin_value, cos_value;
+			    sincos(angle_radians, sin_value, cos_value);
+
+                const float2x2 rotation_matrix = float2x2(cos_value, -sin_value, sin_value, cos_value);
+			    return mul(rotation_matrix, v);
+			}
+
+			real sample_shadowmap_poisson(TEXTURE2D_SHADOW_PARAM(shadow_map, sampler_shadow_map), float4 shadow_coord, half4 shadow_params, float3 position_ws, const bool is_perspective_projection = true)
             {
                 // Compiler will optimize this branch away as long as isPerspectiveProjection is known at compile time
                 if (is_perspective_projection)
@@ -125,15 +134,20 @@
 
 			    for (int i=0;i<POISSON_DISK_SIZE;i++)
 			    {
-			        uint index;
+			        float2 poisson_disk_sample;
+			        
 			        #ifdef _POISSON_SHADOWS_STRATIFIED
-			        index = uint(POISSON_DISK_SIZE * random_value(float4(position_cs.xyy, i))) % POISSON_DISK_SIZE;
+			        const uint index = uint(POISSON_DISK_SIZE * random_value(float4(position_ws, i))) % POISSON_DISK_SIZE;
+			        poisson_disk_sample = poisson_disk[index];
+			        #elif defined(_POISSON_SHADOWS_ROTATED)
+			        const float random_angle = random_value(float4(position_ws, i)) * 2 * PI;
+                    poisson_disk_sample = rotate2d(poisson_disk[i], random_angle);
 			        #else
-                    index = i;
+                    poisson_disk_sample = poisson_disk[i];
 			        #endif
 			        
 			        float3 sample_shadow_coord = shadow_coord.xyz;
-			        sample_shadow_coord += float3(poisson_disk[index] * _PoissonShadowsSpreadInv, 0);
+			        sample_shadow_coord += float3(poisson_disk_sample * _PoissonShadowsSpreadInv, 0);
 			        attenuation += SAMPLE_TEXTURE2D_SHADOW(shadow_map, sampler_shadow_map, sample_shadow_coord) / POISSON_DISK_SIZE;
                 }
 
@@ -146,13 +160,13 @@
                 return BEYOND_SHADOW_FAR(shadow_coord) ? 1.0 : attenuation;
             }
 
-			Light get_main_light_poisson(const float4 shadow_coord, const float4 position_cs)
+			Light get_main_light_poisson(const float4 shadow_coord, const float3 position_ws)
 			{
 			    #ifdef _POISSON_SHADOWS_ANY
 			    Light light = GetMainLight();
 
                 const half4 shadow_params = GetMainLightShadowParams();
-			    light.shadowAttenuation = sample_shadowmap_poisson(TEXTURE2D_ARGS(_MainLightShadowmapTexture, sampler_MainLightShadowmapTexture), shadow_coord, shadow_params, position_cs, false);
+			    light.shadowAttenuation = sample_shadowmap_poisson(TEXTURE2D_ARGS(_MainLightShadowmapTexture, sampler_MainLightShadowmapTexture), shadow_coord, shadow_params, position_ws, false);
 
 			    return light;
 			    #else
@@ -163,7 +177,7 @@
 			half4 frag (const v2f i) : SV_Target
 			{
                 const float4 shadow_coord = TransformWorldToShadowCoord(i.position_ws);
-			    const Light light = get_main_light_poisson(shadow_coord, i.position_cs);
+			    const Light light = get_main_light_poisson(shadow_coord, i.position_ws);
 			    const half n_dot_l = saturate(dot(i.normal_ws, light.direction));
 
 			    const half3 albedo = _BaseColor.rgb;

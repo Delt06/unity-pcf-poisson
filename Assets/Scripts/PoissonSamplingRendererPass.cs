@@ -23,6 +23,7 @@ public class PoissonSamplingRendererPass : ScriptableRenderPass, IDisposable
 
     public PoissonSamplingShadows.PoissonDiskSize DiskSize { get; set; }
 
+
     public void Dispose()
     {
         Shader.DisableKeyword(PoissonShadowsKeyword);

@@ -20,7 +20,9 @@ public class PoissonSamplingShadows : ScriptableRendererFeature
     [Min(0.1f)]
     public float Spread = 700f;
     public PoissonSamplingMode Mode = PoissonSamplingMode.PoissonSampling;
+
     public PoissonDiskSize DiskSize = PoissonDiskSize._16;
+
     private PoissonSamplingRendererPass _pass;
 
     private void OnDestroy()
