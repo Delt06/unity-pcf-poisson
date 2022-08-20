@@ -67,5 +67,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Active: 1
   Spread: 1000
-  Mode: 1
+  Mode: 3
+  RotationSamplingTexture: {fileID: 11700000, guid: dd541e86e3a38954aa3d83830653848e, type: 2}
   DiskSize: 1

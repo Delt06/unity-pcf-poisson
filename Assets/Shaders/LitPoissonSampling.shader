@@ -52,6 +52,8 @@
             };
 
 			float _PoissonShadowsSpreadInv;
+			TEXTURE3D(_PoissonShadowsRotationTexture);
+			SAMPLER(sampler_PoissonShadowsRotationTexture);
 
 			CBUFFER_START(UnityPerMaterial)
 			half4 _BaseColor;
@@ -115,15 +117,6 @@
                 return frac(sin(dot_product) * 43758.5453);
 			}
 
-			float2 rotate2d(const float2 v, const float angle_radians)
-			{
-			    float sin_value, cos_value;
-			    sincos(angle_radians, sin_value, cos_value);
-
-                const float2x2 rotation_matrix = float2x2(cos_value, -sin_value, sin_value, cos_value);
-			    return mul(rotation_matrix, v);
-			}
-
 			real sample_shadowmap_poisson(TEXTURE2D_SHADOW_PARAM(shadow_map, sampler_shadow_map), float4 shadow_coord, half4 shadow_params, float3 position_ws, const bool is_perspective_projection = true)
             {
                 // Compiler will optimize this branch away as long as isPerspectiveProjection is known at compile time
@@ -131,6 +124,11 @@
                     shadow_coord.xyz /= shadow_coord.w;
 
 			    real attenuation = 0;
+
+			    #ifdef _POISSON_SHADOWS_ROTATED
+			    float2 rotation = SAMPLE_TEXTURE3D(_PoissonShadowsRotationTexture, sampler_PoissonShadowsRotationTexture, position_ws.xyz * 100).xy;
+			    rotation = rotation * 2 - 1;
+			    #endif
 
 			    for (int i=0;i<POISSON_DISK_SIZE;i++)
 			    {
@@ -140,8 +138,11 @@
 			        const uint index = uint(POISSON_DISK_SIZE * random_value(float4(position_ws, i))) % POISSON_DISK_SIZE;
 			        poisson_disk_sample = poisson_disk[index];
 			        #elif defined(_POISSON_SHADOWS_ROTATED)
-			        const float random_angle = random_value(float4(position_ws, i)) * 2 * PI;
-                    poisson_disk_sample = rotate2d(poisson_disk[i], random_angle);
+			        poisson_disk_sample = poisson_disk[i];
+			        poisson_disk_sample = float2(
+                        rotation.x * poisson_disk_sample.x - rotation.y * poisson_disk_sample.y,
+                        rotation.y * poisson_disk_sample.x + rotation.x * poisson_disk_sample.y
+                        );
 			        #else
                     poisson_disk_sample = poisson_disk[i];
 			        #endif

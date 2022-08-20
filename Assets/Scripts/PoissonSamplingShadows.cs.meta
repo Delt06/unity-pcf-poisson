@@ -1,3 +1,12 @@
-﻿fileFormatVersion: 2
+fileFormatVersion: 2
 guid: b5b9f53d8d8547988986db4a147e4e9e
-timeCreated: 1660990098
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - RotationSamplingTexture: {fileID: 11700000, guid: dd541e86e3a38954aa3d83830653848e, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

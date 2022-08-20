@@ -20,6 +20,8 @@ public class PoissonSamplingShadows : ScriptableRendererFeature
     [Min(0.1f)]
     public float Spread = 700f;
     public PoissonSamplingMode Mode = PoissonSamplingMode.PoissonSampling;
+    [HideInInspector]
+    public Texture3D RotationSamplingTexture;
 
     public PoissonDiskSize DiskSize = PoissonDiskSize._16;
 
@@ -37,6 +39,7 @@ public class PoissonSamplingShadows : ScriptableRendererFeature
             Mode = Mode,
             Spread = Spread,
             DiskSize = DiskSize,
+            RotationSamplingTexture = RotationSamplingTexture,
         };
     }
 

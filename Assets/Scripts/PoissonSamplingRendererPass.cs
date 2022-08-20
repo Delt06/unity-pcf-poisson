@@ -14,6 +14,7 @@ public class PoissonSamplingRendererPass : ScriptableRenderPass, IDisposable
 
 
     private static readonly int PoissonShadowsSpreadInvId = Shader.PropertyToID("_PoissonShadowsSpreadInv");
+    private static readonly int PoissonShadowsRotationTextureId = Shader.PropertyToID("_PoissonShadowsRotationTexture");
 
     public PoissonSamplingRendererPass() => renderPassEvent = RenderPassEvent.BeforeRendering;
 
@@ -22,6 +23,8 @@ public class PoissonSamplingRendererPass : ScriptableRenderPass, IDisposable
     public float Spread { get; set; }
 
     public PoissonSamplingShadows.PoissonDiskSize DiskSize { get; set; }
+
+    public Texture3D RotationSamplingTexture { get; set; }
 
 
     public void Dispose()
@@ -32,6 +35,8 @@ public class PoissonSamplingRendererPass : ScriptableRenderPass, IDisposable
 
         Shader.DisableKeyword(PoissonShadowsDisk4Keyword);
         Shader.DisableKeyword(PoissonShadowsDisk16Keyword);
+
+        Shader.SetGlobalTexture(PoissonShadowsRotationTextureId, null);
     }
 
     public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
@@ -85,6 +90,12 @@ public class PoissonSamplingRendererPass : ScriptableRenderPass, IDisposable
             cmd.DisableShaderKeyword(PoissonShadowsDisk4Keyword);
             cmd.DisableShaderKeyword(PoissonShadowsDisk16Keyword);
         }
+
+        cmd.SetGlobalTexture(PoissonShadowsRotationTextureId,
+            Mode == PoissonSamplingShadows.PoissonSamplingMode.PoissonSamplingRotated
+                ? RotationSamplingTexture
+                : Texture2D.blackTexture
+        );
 
 
         cmd.SetGlobalFloat(PoissonShadowsSpreadInvId, 1f / Spread);
