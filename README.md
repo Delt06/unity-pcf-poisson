@@ -2,7 +2,7 @@
 
 PCF (Percentage Closer Filtering) via Poisson sampling for Unity and Universal Render Pipeline.
 
-> Built with Unity 2021.3.0f1 and URP v12.1.6
+> Built with Unity 2021.3.0f1 and URP v12.1.6.
  
 ![Preview](Documentation/poisson_default_16.jpg)
 
