@@ -1,6 +1,8 @@
-﻿# Unity PCF (Poisson Sampling)
+# Unity PCF (Poisson Sampling)
 
 PCF (Percentage Closer Filtering) via Poisson sampling for Unity and Universal Render Pipeline.
+
+Used to prevent aliasing, which is one of the problems of shadow mapping.
 
 > Built with Unity 2021.3.0f1 and URP v12.1.6.
  
