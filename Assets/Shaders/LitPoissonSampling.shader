@@ -130,6 +130,7 @@
 			    rotation = rotation * 2 - 1;
 			    #endif
 
+			    UNITY_UNROLL
 			    for (int i=0;i<POISSON_DISK_SIZE;i++)
 			    {
 			        float2 poisson_disk_sample;
