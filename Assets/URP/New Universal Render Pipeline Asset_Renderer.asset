@@ -66,7 +66,7 @@ MonoBehaviour:
   m_Name: PoissonSamplingShadows
   m_EditorClassIdentifier: 
   m_Active: 1
-  Spread: 1000
-  Mode: 3
+  Spread: 2000
+  Mode: 0
   RotationSamplingTexture: {fileID: 11700000, guid: dd541e86e3a38954aa3d83830653848e, type: 2}
-  DiskSize: 1
+  SamplesCount: 1
