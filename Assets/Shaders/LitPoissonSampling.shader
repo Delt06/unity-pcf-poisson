@@ -105,7 +105,7 @@
 
 			#define POISSON_DISK_SIZE 0
 
-			static const float2 poisson_disk[] = {};
+			static const float2 poisson_disk[1];
 
 			#endif
 
