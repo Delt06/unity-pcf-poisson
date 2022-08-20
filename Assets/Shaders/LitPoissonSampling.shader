@@ -4,9 +4,6 @@
 	{
 	    [MainColor]
 		_BaseColor ("Albedo", Color) = (1.0, 1.0, 1.0, 1.0)
-	    _PoissonSpread ("Poisson Spread", Float) = 700
-	    [Toggle(POISSON_SAMPLING_STRATIFIED)]
-	    _PoissonStratified ("Stratifier Poission Sampling", Float) = 0
 	}
 	SubShader
 	{
@@ -23,12 +20,18 @@
 			#pragma fragment frag
 
 			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
+			#pragma multi_compile _ _SHADOWS_SOFT
+			#pragma multi_compile _ _POISSON_SHADOWS _POISSON_SHADOWS_STRATIFIED _POISSON_SHADOWS_ROTATED
 
 			#pragma shader_feature_local POISSON_SAMPLING_STRATIFIED
 			
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+
+			#if defined(_POISSON_SHADOWS) || defined(_POISSON_SHADOWS_STRATIFIED) || defined(_POISSON_SHADOWS_ROTATED)
+			#define _POISSON_SHADOWS_ANY
+			#endif
 
 			struct appdata
 			{
@@ -47,9 +50,10 @@
                 float3 position_ws : POSITION_WS;
             };
 
+			float _PoissonShadowsSpreadInv;
+
 			CBUFFER_START(UnityPerMaterial)
 			half4 _BaseColor;
-			float _PoissonSpread;
 			CBUFFER_END
 			
 			v2f vert (const appdata v)
@@ -90,14 +94,14 @@
 			    for (int i=0;i<POISSON_DISK_SIZE;i++)
 			    {
 			        uint index;
-			        #ifdef POISSON_SAMPLING_STRATIFIED
+			        #ifdef _POISSON_SHADOWS_STRATIFIED
 			        index = uint(POISSON_DISK_SIZE * random_value(float4(position_cs.xyy, i))) % POISSON_DISK_SIZE;
 			        #else
                     index = i;
 			        #endif
 			        
 			        float3 sample_shadow_coord = shadow_coord.xyz;
-			        sample_shadow_coord += float3(poisson_disk[index] / _PoissonSpread, 0);
+			        sample_shadow_coord += float3(poisson_disk[index] * _PoissonShadowsSpreadInv, 0);
 			        attenuation += SAMPLE_TEXTURE2D_SHADOW(shadow_map, sampler_shadow_map, sample_shadow_coord) / POISSON_DISK_SIZE;
                 }
 
@@ -112,12 +116,16 @@
 
 			Light get_main_light_poisson(const float4 shadow_coord, const float4 position_cs)
 			{
+			    #ifdef _POISSON_SHADOWS_ANY
 			    Light light = GetMainLight();
 
                 const half4 shadow_params = GetMainLightShadowParams();
 			    light.shadowAttenuation = sample_shadowmap_poisson(TEXTURE2D_ARGS(_MainLightShadowmapTexture, sampler_MainLightShadowmapTexture), shadow_coord, shadow_params, position_cs, false);
 
 			    return light;
+			    #else
+                return GetMainLight(shadow_coord);
+			    #endif
 			}
 			
 			half4 frag (const v2f i) : SV_Target
