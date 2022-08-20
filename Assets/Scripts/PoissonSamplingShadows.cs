@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
 public class PoissonSamplingShadows : ScriptableRendererFeature
@@ -28,5 +29,10 @@ public class PoissonSamplingShadows : ScriptableRendererFeature
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
         renderer.EnqueuePass(_pass);
+    }
+
+    private void OnDestroy()
+    {
+        _pass.Dispose();
     }
 }

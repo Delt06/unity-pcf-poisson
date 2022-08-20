@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-public class PoissonSamplingRendererPass : ScriptableRenderPass
+public class PoissonSamplingRendererPass : ScriptableRenderPass, IDisposable
 {
     private const string PoissonShadowsKeyword = "_POISSON_SHADOWS";
     private const string PoissonShadowsStratifiedKeyword = "_POISSON_SHADOWS_STRATIFIED";
@@ -16,6 +16,13 @@ public class PoissonSamplingRendererPass : ScriptableRenderPass
     public PoissonSamplingShadows.PoissonSamplingMode Mode { get; set; }
 
     public float Spread { get; set; }
+
+    public void Dispose()
+    {
+        Shader.DisableKeyword(PoissonShadowsKeyword);
+        Shader.DisableKeyword(PoissonShadowsStratifiedKeyword);
+        Shader.DisableKeyword(PoissonShadowsRotatedKeyword);
+    }
 
     public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
     {
