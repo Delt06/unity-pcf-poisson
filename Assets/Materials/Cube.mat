@@ -21,7 +21,9 @@ Material:
     serializedVersion: 3
     m_TexEnvs: []
     m_Ints: []
-    m_Floats: []
+    m_Floats:
+    - _PoissonSpread: 1287
+    - _PoissonStratified: 0
     m_Colors:
     - _BaseColor: {r: 0.8679245, g: 0.24973297, b: 0.41495472, a: 1}
   m_BuildTextureStacks: []

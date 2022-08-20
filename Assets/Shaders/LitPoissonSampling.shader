@@ -4,6 +4,9 @@
 	{
 	    [MainColor]
 		_BaseColor ("Albedo", Color) = (1.0, 1.0, 1.0, 1.0)
+	    _PoissonSpread ("Poisson Spread", Float) = 700
+	    [Toggle(POISSON_SAMPLING_STRATIFIED)]
+	    _PoissonStratified ("Stratifier Poission Sampling", Float) = 0
 	}
 	SubShader
 	{
@@ -20,6 +23,8 @@
 			#pragma fragment frag
 
 			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
+
+			#pragma shader_feature_local POISSON_SAMPLING_STRATIFIED
 			
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
@@ -44,6 +49,7 @@
 
 			CBUFFER_START(UnityPerMaterial)
 			half4 _BaseColor;
+			float _PoissonSpread;
 			CBUFFER_END
 			
 			v2f vert (const appdata v)
@@ -56,11 +62,68 @@
 			    o.position_ws = position_ws;
 				return o;
 			}
+
+			#define POISSON_DISK_SIZE 4
+
+			float random_value(const float4 seed4)
+			{
+                const float dot_product = dot(seed4, float4(12.9898,78.233,45.164,94.673));
+                return frac(sin(dot_product) * 43758.5453);
+			}
+
+			real sample_shadowmap_poisson(TEXTURE2D_SHADOW_PARAM(shadow_map, sampler_shadow_map), float4 shadow_coord, half4 shadow_params, float4 position_cs, const bool is_perspective_projection = true)
+            {
+                // Compiler will optimize this branch away as long as isPerspectiveProjection is known at compile time
+                if (is_perspective_projection)
+                    shadow_coord.xyz /= shadow_coord.w;
+
+
+                const float2 poisson_disk[POISSON_DISK_SIZE] = {
+                  float2( -0.94201624, -0.39906216 ),
+                  float2( 0.94558609, -0.76890725 ),
+                  float2( -0.094184101, -0.92938870 ),
+                  float2( 0.34495938, 0.29387760 )
+                };
+
+			    real attenuation = 0;
+
+			    for (int i=0;i<POISSON_DISK_SIZE;i++)
+			    {
+			        uint index;
+			        #ifdef POISSON_SAMPLING_STRATIFIED
+			        index = uint(POISSON_DISK_SIZE * random_value(float4(position_cs.xyy, i))) % POISSON_DISK_SIZE;
+			        #else
+                    index = i;
+			        #endif
+			        
+			        float3 sample_shadow_coord = shadow_coord.xyz;
+			        sample_shadow_coord += float3(poisson_disk[index] / _PoissonSpread, 0);
+			        attenuation += SAMPLE_TEXTURE2D_SHADOW(shadow_map, sampler_shadow_map, sample_shadow_coord) / POISSON_DISK_SIZE;
+                }
+
+                const real shadow_strength = shadow_params.x;
+
+                attenuation = LerpWhiteTo(attenuation, shadow_strength);
+
+                // Shadow coords that fall out of the light frustum volume must always return attenuation 1.0
+                // TODO: We could use branch here to save some perf on some platforms.
+                return BEYOND_SHADOW_FAR(shadow_coord) ? 1.0 : attenuation;
+            }
+
+			Light get_main_light_poisson(const float4 shadow_coord, const float4 position_cs)
+			{
+			    Light light = GetMainLight();
+
+                const half4 shadow_params = GetMainLightShadowParams();
+			    light.shadowAttenuation = sample_shadowmap_poisson(TEXTURE2D_ARGS(_MainLightShadowmapTexture, sampler_MainLightShadowmapTexture), shadow_coord, shadow_params, position_cs, false);
+
+			    return light;
+			}
 			
 			half4 frag (const v2f i) : SV_Target
 			{
                 const float4 shadow_coord = TransformWorldToShadowCoord(i.position_ws);
-			    const Light light = GetMainLight(shadow_coord);
+			    const Light light = get_main_light_poisson(shadow_coord, i.position_cs);
 			    const half n_dot_l = saturate(dot(i.normal_ws, light.direction));
 
 			    const half3 albedo = _BaseColor.rgb;
