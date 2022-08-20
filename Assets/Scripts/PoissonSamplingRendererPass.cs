@@ -22,7 +22,7 @@ public class PoissonSamplingRendererPass : ScriptableRenderPass, IDisposable
 
     public float Spread { get; set; }
 
-    public PoissonSamplingShadows.PoissonDiskSize DiskSize { get; set; }
+    public PoissonSamplingShadows.PoissonSamplesCount SamplesCount { get; set; }
 
     public Texture3D RotationSamplingTexture { get; set; }
 
@@ -71,13 +71,13 @@ public class PoissonSamplingRendererPass : ScriptableRenderPass, IDisposable
 
         if (Mode != PoissonSamplingShadows.PoissonSamplingMode.Disabled)
         {
-            switch (DiskSize)
+            switch (SamplesCount)
             {
-                case PoissonSamplingShadows.PoissonDiskSize._4:
+                case PoissonSamplingShadows.PoissonSamplesCount._4:
                     cmd.EnableShaderKeyword(PoissonShadowsDisk4Keyword);
                     cmd.DisableShaderKeyword(PoissonShadowsDisk16Keyword);
                     break;
-                case PoissonSamplingShadows.PoissonDiskSize._16:
+                case PoissonSamplingShadows.PoissonSamplesCount._16:
                     cmd.DisableShaderKeyword(PoissonShadowsDisk4Keyword);
                     cmd.EnableShaderKeyword(PoissonShadowsDisk16Keyword);
                     break;

@@ -3,7 +3,7 @@ using UnityEngine.Rendering.Universal;
 
 public class PoissonSamplingShadows : ScriptableRendererFeature
 {
-    public enum PoissonDiskSize
+    public enum PoissonSamplesCount
     {
         _4,
         _16,
@@ -23,7 +23,7 @@ public class PoissonSamplingShadows : ScriptableRendererFeature
     [HideInInspector]
     public Texture3D RotationSamplingTexture;
 
-    public PoissonDiskSize DiskSize = PoissonDiskSize._16;
+    public PoissonSamplesCount SamplesCount = PoissonSamplesCount._16;
 
     private PoissonSamplingRendererPass _pass;
 
@@ -38,7 +38,7 @@ public class PoissonSamplingShadows : ScriptableRendererFeature
         {
             Mode = Mode,
             Spread = Spread,
-            DiskSize = DiskSize,
+            SamplesCount = SamplesCount,
             RotationSamplingTexture = RotationSamplingTexture,
         };
     }
