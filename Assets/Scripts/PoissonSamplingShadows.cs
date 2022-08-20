@@ -17,9 +17,9 @@ public class PoissonSamplingShadows : ScriptableRendererFeature
         PoissonSamplingRotated,
     }
 
+    public PoissonSamplingMode Mode = PoissonSamplingMode.PoissonSampling;
     [Min(0.1f)]
     public float Spread = 700f;
-    public PoissonSamplingMode Mode = PoissonSamplingMode.PoissonSampling;
     [HideInInspector]
     public Texture3D RotationSamplingTexture;
 
