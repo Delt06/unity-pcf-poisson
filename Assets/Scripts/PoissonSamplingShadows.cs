@@ -1,9 +1,14 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
 public class PoissonSamplingShadows : ScriptableRendererFeature
 {
+    public enum PoissonDiskSize
+    {
+        _4,
+        _16,
+    }
+
     public enum PoissonSamplingMode
     {
         Disabled,
@@ -15,7 +20,13 @@ public class PoissonSamplingShadows : ScriptableRendererFeature
     [Min(0.1f)]
     public float Spread = 700f;
     public PoissonSamplingMode Mode = PoissonSamplingMode.PoissonSampling;
+    public PoissonDiskSize DiskSize = PoissonDiskSize._16;
     private PoissonSamplingRendererPass _pass;
+
+    private void OnDestroy()
+    {
+        _pass.Dispose();
+    }
 
     public override void Create()
     {
@@ -23,16 +34,12 @@ public class PoissonSamplingShadows : ScriptableRendererFeature
         {
             Mode = Mode,
             Spread = Spread,
+            DiskSize = DiskSize,
         };
     }
 
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
         renderer.EnqueuePass(_pass);
-    }
-
-    private void OnDestroy()
-    {
-        _pass.Dispose();
     }
 }

@@ -66,5 +66,6 @@ MonoBehaviour:
   m_Name: PoissonSamplingShadows
   m_EditorClassIdentifier: 
   m_Active: 1
-  Spread: 1000
+  Spread: 750
   Mode: 1
+  DiskSize: 1

@@ -22,6 +22,7 @@
 			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
 			#pragma multi_compile _ _SHADOWS_SOFT
 			#pragma multi_compile _ _POISSON_SHADOWS _POISSON_SHADOWS_STRATIFIED _POISSON_SHADOWS_ROTATED
+			#pragma multi_compile _ _POISSON_SHADOWS_DISK_4 _POISSON_SHADOWS_DISK_16
 
 			#pragma shader_feature_local POISSON_SAMPLING_STRATIFIED
 			
@@ -67,7 +68,46 @@
 				return o;
 			}
 
+			#ifdef _POISSON_SHADOWS_DISK_4
+
 			#define POISSON_DISK_SIZE 4
+
+			static const float2 poisson_disk[] = {
+              float2( -0.94201624, -0.39906216 ),
+              float2( 0.94558609, -0.76890725 ),
+              float2( -0.094184101, -0.92938870 ),
+              float2( 0.34495938, 0.29387760 )
+            };
+			#elif defined(_POISSON_SHADOWS_DISK_16)
+
+			#define POISSON_DISK_SIZE 16
+
+			static const float2 poisson_disk[] = {
+               float2( -0.94201624, -0.39906216 ), 
+               float2( 0.94558609, -0.76890725 ), 
+               float2( -0.094184101, -0.92938870 ), 
+               float2( 0.34495938, 0.29387760 ), 
+               float2( -0.91588581, 0.45771432 ), 
+               float2( -0.81544232, -0.87912464 ), 
+               float2( -0.38277543, 0.27676845 ), 
+               float2( 0.97484398, 0.75648379 ), 
+               float2( 0.44323325, -0.97511554 ), 
+               float2( 0.53742981, -0.47373420 ), 
+               float2( -0.26496911, -0.41893023 ), 
+               float2( 0.79197514, 0.19090188 ), 
+               float2( -0.24188840, 0.99706507 ), 
+               float2( -0.81409955, 0.91437590 ), 
+               float2( 0.19984126, 0.78641367 ), 
+               float2( 0.14383161, -0.14100790 ) 
+            };
+
+			#else
+
+			#define POISSON_DISK_SIZE 0
+
+			static const float2 poisson_disk[] = {};
+
+			#endif
 
 			float random_value(const float4 seed4)
 			{
@@ -80,14 +120,6 @@
                 // Compiler will optimize this branch away as long as isPerspectiveProjection is known at compile time
                 if (is_perspective_projection)
                     shadow_coord.xyz /= shadow_coord.w;
-
-
-                const float2 poisson_disk[POISSON_DISK_SIZE] = {
-                  float2( -0.94201624, -0.39906216 ),
-                  float2( 0.94558609, -0.76890725 ),
-                  float2( -0.094184101, -0.92938870 ),
-                  float2( 0.34495938, 0.29387760 )
-                };
 
 			    real attenuation = 0;
 
