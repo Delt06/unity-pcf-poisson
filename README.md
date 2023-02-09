@@ -1,4 +1,4 @@
-# Unity PCF (Poisson Sampling)
+# Custom Unity PCF (Poisson Sampling)
 
 PCF (Percentage Closer Filtering) via Poisson sampling for Unity and Universal Render Pipeline.
 
